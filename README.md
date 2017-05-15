@@ -50,18 +50,18 @@ https://racetrack-dev.eng.vmware.com/resultdetails.php?id=1012549&resultid=35006
 ```
 
 ## Index
-[TestSetBegin](TestSetBegin) <br />
-[TestSetUpdate](TestSetUpdate) <br />
-[TestSetEnd](TestSetEnd) <br />
-[TestSetData](TestSetData) <br />
-[TestCaseBegin](TestCaseBegin) <br />
-[TestCaseUpdate](TestCaseUpdate) <br />
-[TestCaseEnd](TestCaseEnd) <br />
-[TestCaseComment](TestCaseComment) <br />
-[TestCaseVerification](TestCaseVerification) <br />
-[TestCaseWarning](TestCaseWarning) <br />
-[TestCaseScreenshot](TestCaseScreenshot) <br />
-[TestCaseLog](TestCaseLog) <br />
+[TestSetBegin](#testsetbegin) <br />
+[TestSetUpdate](#testsetupdate) <br />
+[TestSetEnd](#testsetend) <br />
+[TestSetData](#testsetdata) <br />
+[TestCaseBegin](#testcasebegin) <br />
+[TestCaseUpdate](#testcaseupdate) <br />
+[TestCaseEnd](#testcaseend) <br />
+[TestCaseComment](#testcasecomment) <br />
+[TestCaseVerification](#testcaseverification) <br />
+[TestCaseWarning](#testcasewarning) <br />
+[TestCaseScreenshot](#testcasescreenshot) <br />
+[TestCaseLog](#testcaselog) <br />
 
 ### TestSetBegin
 TestSetBegin requests will be a POST request which will return a HTML page with content consisting solely of the ResultSetId. <br />
