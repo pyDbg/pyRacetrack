@@ -60,6 +60,7 @@ class Racetrack(object):
         self.branch = None
         self.testtype = "Regression"
         self.language = "English"
+        self.buildtype = "ob"
 
     def _testcase_defaults(self):
         self.feature = None
@@ -111,7 +112,7 @@ class Racetrack(object):
 
         return response.content
 
-    def test_set_begin(self, buildid, product, description, user=None, hostos=None,
+    def test_set_begin(self, buildid, product, description, user, hostos=None,
                        server_buildid=None, branch=None, buildtype=None, testtype=None, language=None):
         """
         TestSetBegin requests will be a POST request which will return a HTML page with content consisting solely of the ResultSetId.
