@@ -64,6 +64,14 @@ https://racetrack-dev.eng.vmware.com/resultdetails.php?id=1012549&resultid=35006
 [TestCaseLog](#testcaselog) <br />
 
 ### TestSetBegin
+
+__Racetrack.test_set_set_begin__
+
+```python
+    def test_set_begin(self, buildid, product, description, user, hostos=None,
+                       server_buildid=None, branch=None, buildtype=None, testtype=None, language=None):
+        ...
+```
 TestSetBegin requests will be a POST request which will return a HTML page with content consisting solely of the ResultSetId. <br />
 Clients should retain this value as it is necessary for other requests. <br />
 If there is an error processing the request, the server will return a 400 or 500 error code with content indicating the error condition. <br />
@@ -79,8 +87,8 @@ The table below shows the parameters that the request is capable of processing, 
 |serverbuildid	|No	|The build number of the "server" product|
 |branch	        |No	|The perforce branch which generated the build|
 |buildtype	    |No	|The type of build under test|
-|testtype	    |No	|Enum of 'BATS', 'Smoke', 'Regression', 'DBT', 'Performance', 'Stress', 'Scale', 'CBATS', 'Unit' (default 'Regression')|
-|language	    |No	|Enum of 'English', 'Japanese', 'French', 'Italian', 'German', 'Spanish', 'Portuguese', 'Chinese', 'Korean', 'Chinese Simplify', 'Chinese Traditional' (default 'English')|
+|testtype	    |No	|Enum of 'BATS', 'Smoke', 'Regression', 'DBT', 'Performance', 'Stress', 'Scale', 'CBATS', 'Unit' (default **Regression**)|
+|language	    |No	|Enum of 'English', 'Japanese', 'French', 'Italian', 'German', 'Spanish', 'Portuguese', 'Chinese', 'Korean', 'Chinese Simplify', 'Chinese Traditional' (default **English**)|
 
 ### TestSetBegin
 ### TestSetUpdate
