@@ -15,6 +15,24 @@ RESULT = Result("PASS", "FAIL", "RUNNING", "CONFIG", "SCRIPT", "PRODUCT", "RERUN
 VERIFY = Verify("TRUE", "FALSE")
 
 
+XML_CONTENTS = """
+<Racetrack>
+    <Racetrack_Address value="{0}" />
+    <Racetrack_Port value="{1}" />
+    <RACETRACK_SET_ID value="{2}" />
+    <RACETRACK_SET_BUILD_ID value="{3}" />
+    <RACETRACK_SET_USER value="{4}" />
+    <RACETRACK_SET_PRODUCT value="{5}" />
+    <RACETRACK_SET_DESCRIPTION value="{6}" />
+    <RACETRACK_SET_HOST_OS value="{7}" />
+    <RACETRACK_CASE_FEATURE value="{8}" />
+    <RACETRACK_CASE_MACHINE_NAME value="{9}" />
+    <RACETRACK_CASE_LOCALE value="{10}" />
+    <RACETRACK_CASE_GOS value="{11}" />
+</Racetrack>
+"""
+
+
 log = logging.getLogger()
 
 
@@ -67,6 +85,11 @@ class Racetrack(object):
         self.test_case_id = None
         self.test_case_name = None
         self.result = RESULT.passs
+        self.description = None
+        self.machine_name = None
+        self.tcmsid = None
+        self.input_language = None
+        self.gos = None
 
     @property
     def url(self):
@@ -295,6 +318,12 @@ class Racetrack(object):
             description = name
 
         self.test_case_name = name
+        self.feature = feature
+        self.description = description
+        self.machine_name = machine_name
+        self.tcmsid = tcmsid
+        self.input_language = input_language
+        self.gos = gos
 
         params = {
             'ResultSetID': result_set_id,
@@ -571,6 +600,30 @@ class Racetrack(object):
             params['Screenshot'] = (os.path.basename(screenshot), open(screenshot, 'rb'))
 
         self._post("TestCaseVerification.php", parameters=params)
+
+    def get_as_xml(self, feature=None, machine=None, gos=None):
+        """
+        <Racetrack>
+            <Racetrack_Address value="{0}" />
+            <Racetrack_Port value="{1}" />
+            <RACETRACK_SET_ID value="{2}" />
+            <RACETRACK_SET_BUILD_ID value="{3}" />
+            <RACETRACK_SET_USER value="{4}" />
+            <RACETRACK_SET_PRODUCT value="{5}" />
+            <RACETRACK_SET_DESCRIPTION value="{6}" />
+            <RACETRACK_SET_HOST_OS value="{7}" />
+            <RACETRACK_CASE_FEATURE value="{8}" />
+            <RACETRACK_CASE_MACHINE_NAME value="{9}" />
+            <RACETRACK_CASE_LOCALE value="{10}" />
+            <RACETRACK_CASE_GOS value="{11}" />
+        </Racetrack> 
+        """
+        if feature is None: feature = self.feature
+        if machine is None: machine = self.machine_name
+        if gos is None: gos = self.gos
+        if self.test_case_id and self.test_set_id:
+            return XML_CONTENTS.format(self.url, self.port, self.test_set_id, self.buildid, self.user, self.product,
+                                       self.description, self.hostos, feature, machine, self.input_language, gos)
 
 
 
