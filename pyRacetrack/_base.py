@@ -33,10 +33,57 @@ XML_CONTENTS = """
 """
 
 
-log = logging.getLogger()
+def build_logger():
+    _ = logging.getLogger()
+    _.setLevel(logging.INFO)
+
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.INFO)
+
+    formatter = logging.Formatter('%(asctime)s [%(levelname)8s] - %(message)s')
+
+    ch.setFormatter(formatter)
+
+    _.addHandler(ch)
+
+    return _
+
+
+log = build_logger()
 
 
 class RacetrackError(BaseException): pass
+
+
+def _console_log(function):
+    def func(self, *args, **kwargs):
+        if self._log_on_console:
+            if len(args) > 0:
+                description = args[0]
+            else:
+                description = kwargs.get('description', '')
+
+            if function.__name__ == 'comment':
+                log.info(description)
+            elif function.__name__ == 'verify':
+                if len(args) > 2:
+                    actual, expected = args[1], args[2]
+                else:
+                    actual, expected = '', ''
+                if actual == expected:
+                    log.info(description + ' [Actual: {0}, Expected: {1}]'.format(actual, expected))
+                else:
+                    log.error(description + ' [Actual: {0}, Expected: {1}]'.format(actual, expected))
+            elif function.__name__ == 'warning':
+                log.warning(description)
+            elif function.__name__ == 'log' or function.__name__ == 'screenshot':
+                if len(args) > 1:
+                    path_ = args[1]
+                else:
+                    path_ = kwargs.get('log') or kwargs.get('screenshot', '')
+                log.info(description + ' [FilePath: {0}]'.format(path_))
+        return function(self, *args, **kwargs)
+    return func
 
 
 class Racetrack(object):
@@ -48,7 +95,7 @@ class Racetrack(object):
 
     _url = None
 
-    def __init__(self, server="racetrack.eng.vmware.com", port=443):
+    def __init__(self, server="racetrack.eng.vmware.com", port=443, log_on_console=False):
         """
         :param server: (str) Racetrack server. Use 'racetrack-dev.eng.vmware.com' for stagging/tests.
          Default: "racetrack.eng.vmware.com"
@@ -58,6 +105,7 @@ class Racetrack(object):
         """
         self.server = server
         self.port = port
+        self._log_on_console = log_on_console
         self._testset_defaults()
         self._testcase_defaults()
 
@@ -430,6 +478,7 @@ class Racetrack(object):
 
         self._testcase_defaults()
 
+    @_console_log
     def comment(self, description, result_id=None):
         """
         TestCaseComment will be a POST request which will return a HTML page with NO content.
@@ -459,6 +508,7 @@ class Racetrack(object):
 
         self._post("TestCaseComment.php", parameters=params)
 
+    @_console_log
     def warning(self, description, result_id=None):
         """
         TestCaseWarning is a POST request which will return a HTML page with NO content.
@@ -488,6 +538,7 @@ class Racetrack(object):
 
         self._post("TestCaseWarning.php", parameters=params)
 
+    @_console_log
     def screenshot(self, description, screenshot, result_id=None):
         """
         TestCaseComment will be a POST request which will return a HTML page with NO content.
@@ -521,6 +572,7 @@ class Racetrack(object):
 
         self._post("TestCaseScreenshot.php", parameters=params)
 
+    @_console_log
     def log(self, description, log, result_id=None):
         """
         TestCaseLog will be a POST request which will return a HTML page with NO content.
@@ -555,6 +607,7 @@ class Racetrack(object):
 
         self._post("TestCaseLog.php", parameters=params)
 
+    @_console_log
     def verify(self, description, actual, expected, screenshot=None, result_id=None):
         """
         TestCaseVerification will be a POST request which will return a HTML page with NO content.
@@ -628,8 +681,8 @@ class Racetrack(object):
 
 
 if __name__ == "__main__":
-    rt = Racetrack()
-    rt.test_set_begin(buildid=12345, user="rramchandani", product="UEM", description="some desc", hostos="10.112.19.19", server_buildid="1234", branch="master")
+    rt = Racetrack(log_on_console=True)
+    rt.test_set_begin(buildid=12345, user="rramchandani", product="dummy", description="some desc", hostos="10.112.19.19", server_buildid="1234", branch="master")
     print(rt.test_set_id)
     rt.test_set_update(testtype="BATs", buildid=23456)
     rt.test_case_begin("testcase", "feature", "some des", "machine", tcmsid=98765)
@@ -637,9 +690,9 @@ if __name__ == "__main__":
     rt.test_case_update(description="new description")
     rt.comment("some comment")
     rt.warning("some warning")
-    rt.verify("some verfication", True, True, screenshot=r"C:\Users\rramchandani\Desktop\ADSites.jpg")
+    rt.verify("some verfication", True, True, screenshot=r"C:\Users\rramchandani\Desktop\1.jpg")
     rt.log("some log", log=r"C:\Users\rramchandani\Desktop\NoAD.xml")
-    rt.screenshot(description="screenshot desc", screenshot=r"C:\Users\rramchandani\Desktop\ADSites.jpg")
-    rt.verify("second verfication", False, False, screenshot=r"C:\Users\rramchandani\Desktop\ADSites.jpg")
+    rt.screenshot(description="screenshot desc", screenshot=r"C:\Users\rramchandani\Desktop\1.jpg")
+    rt.verify("second verfication", False, False, screenshot=r"C:\Users\rramchandani\Desktop\1.jpg")
     rt.test_case_end()
     rt.test_set_end()
