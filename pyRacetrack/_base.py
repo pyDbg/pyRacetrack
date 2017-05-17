@@ -82,6 +82,25 @@ def _console_log(function):
                 else:
                     path_ = kwargs.get('log') or kwargs.get('screenshot', '')
                 log.info(description + ' [FilePath: {0}]'.format(path_))
+            elif function.__name__ == 'test_set_begin':
+                return_ = function(self, *args, **kwargs)
+
+                log.info("TestSet Begin: <{0}, {1}, {2}, {3}, {4}>".format(self.test_set_id, self.product, self.user,
+                                                                           self.buildid, self.description))
+
+                return return_
+            elif function.__name__ == 'test_set_end':
+                log.info("TestSet End: <{0}>".format(self.test_set_id))
+            elif function.__name__ == 'test_case_begin':
+                return_ = function(self, *args, **kwargs)
+
+                log.info("TestCase Begin: <{0}, {1}, {2}, {3}, {4}>".format(self.test_case_id, self.test_case_name,
+                                                                            self.feature, self.description,
+                                                                            self.machine_name))
+
+                return return_
+            elif function.__name__ == 'test_case_end':
+                log.info("TestCase End: <{0}, {1}, {2}>".format(self.test_case_id, self.test_case_name, self.result))
         return function(self, *args, **kwargs)
     return func
 
@@ -183,6 +202,7 @@ class Racetrack(object):
 
         return response.content
 
+    @_console_log
     def test_set_begin(self, buildid, product, description, user, hostos=None,
                        server_buildid=None, branch=None, buildtype=None, testtype=None, language=None):
         """
@@ -287,6 +307,7 @@ class Racetrack(object):
 
         self._post("TestSetUpdate.php", parameters=params)
 
+    @_console_log
     def test_set_end(self, id=None):
         """
         TestSetEnd will be a POST request which will return a HTML page with NO content.
@@ -342,6 +363,7 @@ class Racetrack(object):
         result_set_data_id = int(self._post("TestSetData.php", parameters=params))
         return result_set_data_id
 
+    @_console_log
     def test_case_begin(self, name, feature, description=None, machine_name=None, tcmsid=None,
                         input_language="EN", gos=None, start_time=None, result_set_id=None):
         """
@@ -437,6 +459,7 @@ class Racetrack(object):
 
         self._post("TestCaseUpdate.php", parameters=params)
 
+    @_console_log
     def test_case_end(self, id=None, result=None, end_time=None):
         """
         TestCaseEnd will be a POST request which will return a HTML page with NO content.
@@ -683,10 +706,10 @@ class Racetrack(object):
 if __name__ == "__main__":
     rt = Racetrack(log_on_console=True)
     rt.test_set_begin(buildid=12345, user="rramchandani", product="dummy", description="some desc", hostos="10.112.19.19", server_buildid="1234", branch="master")
-    print(rt.test_set_id)
+    #print(rt.test_set_id)
     rt.test_set_update(testtype="BATs", buildid=23456)
     rt.test_case_begin("testcase", "feature", "some des", "machine", tcmsid=98765)
-    print(rt.test_case_id)
+    #print(rt.test_case_id)
     rt.test_case_update(description="new description")
     rt.comment("some comment")
     rt.warning("some warning")
