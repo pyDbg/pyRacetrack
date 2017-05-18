@@ -69,7 +69,7 @@ def _console_log(function):
                 if len(args) > 2:
                     actual, expected = args[1], args[2]
                 else:
-                    actual, expected = '', ''
+                    actual, expected = kwargs.has_key('actual', ''), kwargs.has_key('expected', '')
                 if actual == expected:
                     log.info(description + ' [Actual: {0}, Expected: {1}]'.format(actual, expected))
                 else:
@@ -234,6 +234,9 @@ class Racetrack(object):
 
         if not product: product = self.product
         else: self.product = product
+
+        if not description: description = self.description
+        else: self.description = description
 
         if not branch: branch = self.branch
         else: self.branch = branch
@@ -697,7 +700,7 @@ class Racetrack(object):
         if feature is None: feature = self.feature
         if machine is None: machine = self.machine_name
         if gos is None: gos = self.gos
-        if self.test_case_id and self.test_set_id:
+        if self.test_set_id:
             return XML_CONTENTS.format(self.url, self.port, self.test_set_id, self.buildid, self.user, self.product,
                                        self.description, self.hostos, feature, machine, self.input_language, gos)
 
@@ -718,4 +721,5 @@ if __name__ == "__main__":
     rt.screenshot(description="screenshot desc", screenshot=r"C:\Users\rramchandani\Desktop\1.jpg")
     rt.verify("second verfication", False, False, screenshot=r"C:\Users\rramchandani\Desktop\1.jpg")
     rt.test_case_end()
+    print rt.get_as_xml(feature="New", machine="Gos", gos="Win7")
     rt.test_set_end()
