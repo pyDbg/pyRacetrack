@@ -21,7 +21,7 @@ packages = [
 requires = ['requests']
 
 
-with open('README.rst', 'r', 'utf-8') as f:
+with open('README.md', 'r', 'utf-8') as f:
     readme = f.read()
 
 setup(

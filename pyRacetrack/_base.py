@@ -69,7 +69,7 @@ def _console_log(function):
                 if len(args) > 2:
                     actual, expected = args[1], args[2]
                 else:
-                    actual, expected = kwargs.has_key('actual', ''), kwargs.has_key('expected', '')
+                    actual, expected = kwargs.get('actual', ''), kwargs.get('expected', '')
                 if actual == expected:
                     log.info(description + ' [Actual: {0}, Expected: {1}]'.format(actual, expected))
                 else:
