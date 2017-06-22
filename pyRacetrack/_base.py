@@ -177,6 +177,7 @@ class Racetrack(object):
                         if not self.server.startswith("http") else self.server
         return self._url
 
+    @property
     def test_set_url(self):
         return urlparse.urljoin(self.url, self.test_set_id)
 
