@@ -65,23 +65,31 @@ def _console_log(function):
 
             if function.__name__ == 'comment':
                 log.info(description)
+
             elif function.__name__ == 'verify':
                 if len(args) > 2:
                     actual, expected = args[1], args[2]
                 else:
-                    actual, expected = kwargs.get('actual', ''), kwargs.get('expected', '')
-                if actual == expected:
+                    actual, expected = kwargs.get('actual', None), kwargs.get('expected', None)
+
+                if actual is not None: actual = actual.encode('utf-8')
+                if expected is not None: expected = expected.encode('utf-8')
+
+                if actual == expected and not (actual == expected is None):
                     log.info(description + ' [Actual: {0}, Expected: {1}]'.format(actual, expected))
                 else:
                     log.error(description + ' [Actual: {0}, Expected: {1}]'.format(actual, expected))
+
             elif function.__name__ == 'warning':
                 log.warning(description)
+
             elif function.__name__ == 'log' or function.__name__ == 'screenshot':
                 if len(args) > 1:
                     path_ = args[1]
                 else:
                     path_ = kwargs.get('log') or kwargs.get('screenshot', '')
                 log.info(description + ' [FilePath: {0}]'.format(path_))
+
             elif function.__name__ == 'test_set_begin':
                 return_ = function(self, *args, **kwargs)
 
@@ -89,8 +97,10 @@ def _console_log(function):
                                                                            self.buildid, self.description))
 
                 return return_
+
             elif function.__name__ == 'test_set_end':
                 log.info("TestSet End: <{0}>".format(self.test_set_id))
+
             elif function.__name__ == 'test_case_begin':
                 return_ = function(self, *args, **kwargs)
 
@@ -99,8 +109,10 @@ def _console_log(function):
                                                                             self.machine_name))
 
                 return return_
+
             elif function.__name__ == 'test_case_end':
                 log.info("TestCase End: <{0}, {1}, {2}>".format(self.test_case_id, self.test_case_name, self.result))
+
         return function(self, *args, **kwargs)
     return func
 
@@ -164,6 +176,9 @@ class Racetrack(object):
             self._url = "http{0}://{1}".format(("s" if self.port == 443 else ""), self.server) \
                         if not self.server.startswith("http") else self.server
         return self._url
+
+    def test_set_url(self):
+        return urlparse.urljoin(self.url, self.test_set_id)
 
     @property
     def test_case_url(self):
@@ -707,7 +722,7 @@ class Racetrack(object):
 
 
 if __name__ == "__main__":
-    rt = Racetrack(log_on_console=True)
+    rt = Racetrack(server="racetrack-dev.eng.vmware.com", port=80, log_on_console=True)
     rt.test_set_begin(buildid=12345, user="rramchandani", product="dummy", description="some desc", hostos="10.112.19.19", server_buildid="1234", branch="master")
     #print(rt.test_set_id)
     rt.test_set_update(testtype="BATs", buildid=23456)
@@ -717,7 +732,9 @@ if __name__ == "__main__":
     rt.comment("some comment")
     rt.warning("some warning")
     rt.verify("some verfication", True, True, screenshot=r"C:\Users\rramchandani\Desktop\1.jpg")
-    rt.log("some log", log=r"C:\Users\rramchandani\Desktop\NoAD.xml")
+    with open(r"C:\Users\rramchandani\Desktop\NoAD.xml", "r") as fh:
+        contents = "\n".join(fh.readlines())
+    rt.comment(contents)
     rt.screenshot(description="screenshot desc", screenshot=r"C:\Users\rramchandani\Desktop\1.jpg")
     rt.verify("second verfication", False, False, screenshot=r"C:\Users\rramchandani\Desktop\1.jpg")
     rt.test_case_end()
