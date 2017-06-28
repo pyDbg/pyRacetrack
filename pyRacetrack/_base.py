@@ -124,7 +124,8 @@ class Racetrack(object):
 
     _url = None
 
-    def __init__(self, server="racetrack.eng.vmware.com", port=443, log_on_console=False, logger=None, loglevel='INFO'):
+    def __init__(self, server="racetrack.eng.vmware.com", port=443, log_on_console=False, logger=None, loglevel='INFO',
+                 log_request_and_response=False):
         """
         :param server: (str) Racetrack server. Use 'racetrack-dev.eng.vmware.com' for stagging/tests.
          Default: "racetrack.eng.vmware.com"
@@ -135,6 +136,7 @@ class Racetrack(object):
         self.server = server
         self.port = port
         self._log_on_console = log_on_console
+        self.log_request_and_response = log_request_and_response
         if self._log_on_console:
             if logger is None and not isinstance(logger, logging.Logger):
                 self.logger = build_logger(loglevel)
@@ -142,6 +144,7 @@ class Racetrack(object):
                 self.logger = logger
         else:
             self.logger = None
+
         self._testset_defaults()
         self._testcase_defaults()
 
@@ -194,7 +197,7 @@ class Racetrack(object):
     def _post(self, method, parameters):
         uri = urlparse.urljoin(self.url, method)
 
-        if self.logger is not None:
+        if self.logger is not None and self.log_request_and_response:
             self.logger.debug("[Racetrack]: Post request.")
             self.logger.debug("  URI:     {0}".format(uri))
             self.logger.debug("  Params:  {0}".format(parameters))
@@ -213,7 +216,7 @@ class Racetrack(object):
 
         response = requests.post(uri, data=parameters, files=files, headers=headers)
 
-        if self.logger is not None:
+        if self.logger is not None and self.log_request_and_response:
             if response.status_code == requests.codes.ok:
                 self.logger.debug("[Racetrack]: Post response.")
                 self.logger.debug("  Return code:    {0}".format(response.status_code))
