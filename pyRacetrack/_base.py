@@ -33,12 +33,13 @@ XML_CONTENTS = """
 """
 
 
-def build_logger():
+def build_logger(loglevel="INFO"):
+    loglevel = getattr(logging, loglevel.upper(), 'INFO')
     _ = logging.getLogger()
-    _.setLevel(logging.INFO)
+    _.setLevel(loglevel)
 
     ch = logging.StreamHandler()
-    ch.setLevel(logging.INFO)
+    ch.setLevel(loglevel)
 
     formatter = logging.Formatter('%(asctime)s [%(levelname)8s] - %(message)s')
 
@@ -47,9 +48,6 @@ def build_logger():
     _.addHandler(ch)
 
     return _
-
-
-log = build_logger()
 
 
 class RacetrackError(BaseException): pass
@@ -64,7 +62,7 @@ def _console_log(function):
                 description = kwargs.get('description', '')
 
             if function.__name__ == 'comment':
-                log.info(description)
+                self.logger.info(description)
 
             elif function.__name__ == 'verify':
                 if len(args) > 2:
@@ -76,42 +74,42 @@ def _console_log(function):
                 if expected is not None: expected = expected.encode('utf-8')
 
                 if actual == expected and not (actual == expected is None):
-                    log.info(description + ' [Actual: {0}, Expected: {1}]'.format(actual, expected))
+                    self.logger.info(description + ' [Actual: {0}, Expected: {1}]'.format(actual, expected))
                 else:
-                    log.error(description + ' [Actual: {0}, Expected: {1}]'.format(actual, expected))
+                    self.logger.error(description + ' [Actual: {0}, Expected: {1}]'.format(actual, expected))
 
             elif function.__name__ == 'warning':
-                log.warning(description)
+                self.logger.warning(description)
 
             elif function.__name__ == 'log' or function.__name__ == 'screenshot':
                 if len(args) > 1:
                     path_ = args[1]
                 else:
                     path_ = kwargs.get('log') or kwargs.get('screenshot', '')
-                log.info(description + ' [FilePath: {0}]'.format(path_))
+                self.logger.info(description + ' [FilePath: {0}]'.format(path_))
 
             elif function.__name__ == 'test_set_begin':
                 return_ = function(self, *args, **kwargs)
 
-                log.info("TestSet Begin: <{0}, {1}, {2}, {3}, {4}>".format(self.test_set_id, self.product, self.user,
+                self.logger.info("TestSet Begin: <{0}, {1}, {2}, {3}, {4}>".format(self.test_set_id, self.product, self.user,
                                                                            self.buildid, self.description))
 
                 return return_
 
             elif function.__name__ == 'test_set_end':
-                log.info("TestSet End: <{0}>".format(self.test_set_id))
+                self.logger.info("TestSet End: <{0}>".format(self.test_set_id))
 
             elif function.__name__ == 'test_case_begin':
                 return_ = function(self, *args, **kwargs)
 
-                log.info("TestCase Begin: <{0}, {1}, {2}, {3}, {4}>".format(self.test_case_id, self.test_case_name,
+                self.logger.info("TestCase Begin: <{0}, {1}, {2}, {3}, {4}>".format(self.test_case_id, self.test_case_name,
                                                                             self.feature, self.description,
                                                                             self.machine_name))
 
                 return return_
 
             elif function.__name__ == 'test_case_end':
-                log.info("TestCase End: <{0}, {1}, {2}>".format(self.test_case_id, self.test_case_name, self.result))
+                self.logger.info("TestCase End: <{0}, {1}, {2}>".format(self.test_case_id, self.test_case_name, self.result))
 
         return function(self, *args, **kwargs)
     return func
@@ -126,7 +124,7 @@ class Racetrack(object):
 
     _url = None
 
-    def __init__(self, server="racetrack.eng.vmware.com", port=443, log_on_console=False):
+    def __init__(self, server="racetrack.eng.vmware.com", port=443, log_on_console=False, logger=None, loglevel='INFO'):
         """
         :param server: (str) Racetrack server. Use 'racetrack-dev.eng.vmware.com' for stagging/tests.
          Default: "racetrack.eng.vmware.com"
@@ -137,6 +135,13 @@ class Racetrack(object):
         self.server = server
         self.port = port
         self._log_on_console = log_on_console
+        if self._log_on_console:
+            if logger is None and not isinstance(logger, logging.Logger):
+                self.logger = build_logger(loglevel)
+            else:
+                self.logger = logger
+        else:
+            self.logger = None
         self._testset_defaults()
         self._testcase_defaults()
 
@@ -179,7 +184,7 @@ class Racetrack(object):
 
     @property
     def test_set_url(self):
-        return urlparse.urljoin(self.url, self.test_set_id)
+        return urlparse.urljoin(self.url, "result.php?id={0}".format(self.test_set_id))
 
     @property
     def test_case_url(self):
@@ -189,9 +194,10 @@ class Racetrack(object):
     def _post(self, method, parameters):
         uri = urlparse.urljoin(self.url, method)
 
-        log.debug("[Racetrack]: Post request.")
-        log.debug("  URI:     {0}".format(uri))
-        log.debug("  Params:  {0}".format(parameters))
+        if self.logger is not None:
+            self.logger.debug("[Racetrack]: Post request.")
+            self.logger.debug("  URI:     {0}".format(uri))
+            self.logger.debug("  Params:  {0}".format(parameters))
 
         headers = {"charset": "UTF-8"}
 
@@ -207,14 +213,15 @@ class Racetrack(object):
 
         response = requests.post(uri, data=parameters, files=files, headers=headers)
 
-        if response.status_code == requests.codes.ok:
-            log.debug("[Racetrack]: Post response.")
-            log.debug("  Return code:    {0}".format(response.status_code))
-            log.debug("  Response data:  {0}".format(response.content))
-        else:
-            log.error("[Racetrack]: Post response.")
-            log.error("  Return code:    {0}".format(response.status_code))
-            log.error("  Response data:  {0}".format(response.content))
+        if self.logger is not None:
+            if response.status_code == requests.codes.ok:
+                self.logger.debug("[Racetrack]: Post response.")
+                self.logger.debug("  Return code:    {0}".format(response.status_code))
+                self.logger.debug("  Response data:  {0}".format(response.content))
+            else:
+                self.logger.error("[Racetrack]: Post response.")
+                self.logger.error("  Return code:    {0}".format(response.status_code))
+                self.logger.error("  Response data:  {0}".format(response.content))
 
         return response.content
 
