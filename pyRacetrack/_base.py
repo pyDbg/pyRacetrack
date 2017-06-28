@@ -70,8 +70,8 @@ def _console_log(function):
                 else:
                     actual, expected = kwargs.get('actual', None), kwargs.get('expected', None)
 
-                if actual is not None: actual = actual.encode('utf-8')
-                if expected is not None: expected = expected.encode('utf-8')
+                if actual is not None and isinstance(actual, str): actual = actual.encode('utf-8')
+                if expected is not None and isinstance(actual, str): expected = expected.encode('utf-8')
 
                 if actual == expected and not (actual == expected is None):
                     self.logger.info(description + ' [Actual: {0}, Expected: {1}]'.format(actual, expected))
@@ -732,6 +732,7 @@ class Racetrack(object):
 if __name__ == "__main__":
     rt = Racetrack(server="racetrack-dev.eng.vmware.com", port=80, log_on_console=True)
     rt.test_set_begin(buildid=12345, user="rramchandani", product="dummy", description="some desc", hostos="10.112.19.19", server_buildid="1234", branch="master")
+    print rt.test_set_url
     #print(rt.test_set_id)
     rt.test_set_update(testtype="BATs", buildid=23456)
     rt.test_case_begin("testcase", "feature", "some des", "machine", tcmsid=98765)
