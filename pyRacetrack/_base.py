@@ -8,6 +8,11 @@ from collections import namedtuple
 import logging
 
 
+from requests.packages.urllib3.exceptions import InsecureRequestWarning
+
+requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+
+
 Result = namedtuple("Result", "passs fail running config script product rerunpass unsupported")
 Verify = namedtuple("Verify", "true false")
 
