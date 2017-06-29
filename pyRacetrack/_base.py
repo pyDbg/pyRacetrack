@@ -65,13 +65,15 @@ class RacetrackError(BaseException): pass
 def _console_log(function):
     def func(self, *args, **kwargs):
         if self._log_on_console:
+            logging_function = getattr(self.logger, self.log_action_msgs_as.lower())
+
             if len(args) > 0:
                 description = args[0]
             else:
                 description = kwargs.get('description', '')
 
             if function.__name__ == 'comment':
-                self.logger.info(description)
+                logging_function(description)
 
             elif function.__name__ == 'verify':
                 if len(args) > 2:
@@ -83,7 +85,7 @@ def _console_log(function):
                 if expected is not None and isinstance(actual, str): expected = expected.encode('utf-8')
 
                 if actual == expected and not (actual == expected is None):
-                    self.logger.info(description + ' [Actual: {0}, Expected: {1}]'.format(actual, expected))
+                    logging_function(description + ' [Actual: {0}, Expected: {1}]'.format(actual, expected))
                 else:
                     self.logger.error(description + ' [Actual: {0}, Expected: {1}]'.format(actual, expected))
 
@@ -95,30 +97,30 @@ def _console_log(function):
                     path_ = args[1]
                 else:
                     path_ = kwargs.get('log') or kwargs.get('screenshot', '')
-                self.logger.info(description + ' [FilePath: {0}]'.format(path_))
+                logging_function(description + ' [FilePath: {0}]'.format(path_))
 
             elif function.__name__ == 'test_set_begin':
                 return_ = function(self, *args, **kwargs)
 
-                self.logger.info("TestSet Begin: <{0}, {1}, {2}, {3}, {4}>".format(self.test_set_id, self.product, self.user,
+                logging_function("TestSet Begin: <{0}, {1}, {2}, {3}, {4}>".format(self.test_set_id, self.product, self.user,
                                                                            self.buildid, self.description))
 
                 return return_
 
             elif function.__name__ == 'test_set_end':
-                self.logger.info("TestSet End: <{0}>".format(self.test_set_id))
+                logging_function("TestSet End: <{0}>".format(self.test_set_id))
 
             elif function.__name__ == 'test_case_begin':
                 return_ = function(self, *args, **kwargs)
 
-                self.logger.info("TestCase Begin: <{0}, {1}, {2}, {3}, {4}>".format(self.test_case_id, self.test_case_name,
+                logging_function("TestCase Begin: <{0}, {1}, {2}, {3}, {4}>".format(self.test_case_id, self.test_case_name,
                                                                             self.feature, self.description,
                                                                             self.machine_name))
 
                 return return_
 
             elif function.__name__ == 'test_case_end':
-                self.logger.info("TestCase End: <{0}, {1}, {2}>".format(self.test_case_id, self.test_case_name, self.result))
+                logging_function("TestCase End: <{0}, {1}, {2}>".format(self.test_case_id, self.test_case_name, self.result))
 
         return function(self, *args, **kwargs)
     return func
@@ -134,7 +136,7 @@ class Racetrack(object):
     _url = None
 
     def __init__(self, server="racetrack.eng.vmware.com", port=443, log_on_console=False, logger=None, loglevel='INFO',
-                 log_request_and_response=False):
+                 log_request_and_response=False, log_action_msgs_as='info'):
         """
         :param server: (str) Racetrack server. Use 'racetrack-dev.eng.vmware.com' for stagging/tests.
          Default: "racetrack.eng.vmware.com"
@@ -151,6 +153,7 @@ class Racetrack(object):
                 self.logger = build_logger(loglevel)
             else:
                 self.logger = logger
+            self.log_action_msgs_as = log_action_msgs_as
         else:
             self.logger = None
 
