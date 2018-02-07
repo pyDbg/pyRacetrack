@@ -5,17 +5,19 @@ from pyRacetrack import Racetrack
 
 class RacetrackHandler(logging.Handler):
 
-    def __init__(self, racetrack=None, *args, **kwargs):
+    def __init__(self, racetrack=None, ignore_errors=False, *args, **kwargs):
         super(RacetrackHandler, self).__init__(*args, **kwargs)
         self.racetrack = racetrack
+        self.ignore_errors = ignore_errors
 
     def emit(self, record):
-        if record.levelname in ['ERROR']:
-            self.racetrack.verify(record.msg, actual=False, expected=True)
-        elif record.levelname in ['WARN', 'CRITICAL']:
-            self.racetrack.warning(record.msg)
-        else:
-            self.racetrack.comment(record.msg)
+        if self.racetrack.test_case_id:
+            if record.levelname in ['ERROR'] and not self.ignore_errors:
+                self.racetrack.verify(record.msg, actual=False, expected=True)
+            elif record.levelname in ['WARN', 'CRITICAL']:
+                self.racetrack.warning(record.msg)
+            else:
+                self.racetrack.comment(record.msg)
 
 
 if __name__ == "__main__":
