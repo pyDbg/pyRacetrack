@@ -11,6 +11,8 @@ class RacetrackHandler(logging.Handler):
         self.ignore_errors = ignore_errors
 
     def emit(self, record):
+        if not isinstance(self.racetrack, Racetrack):
+            raise ValueError("Racetrack object is not of type: %s" % Racetrack().__class__.__name__))
         if self.racetrack.test_case_id:
             if record.levelname in ['ERROR'] and not self.ignore_errors:
                 self.racetrack.verify(record.msg, actual=False, expected=True)
